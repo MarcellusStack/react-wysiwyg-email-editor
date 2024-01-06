@@ -1,12 +1,33 @@
 import React from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Editor = () => {
+  const [enablePreview, setEnablePreview] = React.useState(false);
+
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <header className=" text-white p-4 sticky top-0 z-50 border-b border-gray-200">
-        {/* Your header content goes here */}
-        Header
+      <header className=" text-white p-4 sticky top-0 z-50 border-b border-gray-200 flex items-center justify-center">
+        <Tabs defaultValue="editor" className="w-[400px]">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger
+              value="editor"
+              onClick={() => {
+                setEnablePreview(false);
+              }}
+            >
+              Editor
+            </TabsTrigger>
+            <TabsTrigger
+              value="preview"
+              onClick={() => {
+                setEnablePreview(true);
+              }}
+            >
+              Preview
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </header>
 
       <div className="flex-1 overflow-y-auto  flex">
@@ -18,8 +39,8 @@ export const Editor = () => {
 
         {/* Main Content */}
         <main className="flex-1 p-4">
-          {/* Your main content goes here */}
-          Main Content
+          {enablePreview && <div>Preview</div>}
+          {!enablePreview && <div>Editor</div>}
         </main>
 
         {/* Right Sidebar */}
