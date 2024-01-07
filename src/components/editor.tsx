@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -9,10 +9,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { ColorPicker } from "@/components/color-picker";
 import { GripHorizontal, Image } from "lucide-react";
 
 export const Editor = () => {
-  const [enablePreview, setEnablePreview] = React.useState(false);
+  const [enablePreview, setEnablePreview] = useState(false);
 
   return (
     <div className="flex h-screen flex-col">
@@ -103,9 +104,13 @@ export const Editor = () => {
               Settings
             </h2>
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2 col-span-2">
+              <div className="col-span-2 flex flex-col gap-2">
                 <Label htmlFor="email">Content</Label>
                 <Input type="text" name="content" />
+              </div>
+              <div className="col-span-2 flex flex-col gap-2">
+                <Label htmlFor="color">Backgroundcolor</Label>
+                <ColorPicker />
               </div>
             </div>
           </div>
