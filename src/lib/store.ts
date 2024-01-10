@@ -22,30 +22,14 @@ type EditorActions = {
 };
 
 export const useEditorStore = create<EditorProps & EditorActions>()((set) => ({
-  elements: [
-    {
-      id: "dsafadsasd",
-      element: "text",
-      isContainer: false,
-      content: "Hello World",
-      classNames: "string hover:border-yellow-600 border",
-      children: [],
-    },
-    {
-      id: "dsafadsasdsadasd",
-      element: "section",
-      isContainer: true,
-      content: "",
-      classNames: "h-64  hover:border-yellow-600 border",
-      children: [],
-    },
-  ],
+  elements: [],
   selectedElement: null,
   addElement: (parentId, newElement) =>
     set((state) => {
       const updatedElements = addElement(state.elements, parentId, newElement);
       return { elements: updatedElements };
     }),
+
   updateElement: (id, updatedElement) =>
     set((state) => {
       const updatedElements = updateElement(state.elements, id, updatedElement);
@@ -68,6 +52,11 @@ const addElement = (
   parentId: string | null,
   newElement: Element,
 ): Element[] => {
+  if (!parentId) {
+    // If parentId is null, add the new element at the root level
+    return [...elements, newElement];
+  }
+
   return elements.map((element) => {
     if (element.id === parentId) {
       // If the current element matches the parent ID and it's empty, add the new element as its child
@@ -79,11 +68,20 @@ const addElement = (
       }
     } else if (element.children) {
       // Recursively traverse through children
-      return {
-        ...element,
-        children: addElement(element.children, parentId, newElement),
-      };
+      const updatedChildren = addElement(
+        element.children,
+        parentId,
+        newElement,
+      );
+      if (updatedChildren !== element.children) {
+        return {
+          ...element,
+          children: updatedChildren,
+        };
+      }
     }
+
+    // If the element doesn't match the parent ID, return it as is
     return element;
   });
 };
