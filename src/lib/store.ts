@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { v4 as uuidv4 } from "uuid";
 
 export type Element = {
   id: string;
@@ -6,6 +7,7 @@ export type Element = {
   isContainer: boolean;
   content?: string;
   classNames: string;
+  parentId?: string | null;
   children?: Element[];
 };
 
@@ -18,7 +20,7 @@ type EditorActions = {
   addElement: (parentId: string | null, newElement: Element) => void;
   updateElement: (id: string, updatedElement: Element) => void;
   selectElement: (element: Element | null) => void;
-  reorderElements: (sourceIndex: number, destinationIndex: number) => void;
+  reorderElements: (sourceId: string, newParentId: string) => void;
 };
 
 export const useEditorStore = create<EditorProps & EditorActions>()((set) => ({
@@ -36,12 +38,12 @@ export const useEditorStore = create<EditorProps & EditorActions>()((set) => ({
       return { elements: updatedElements };
     }),
   selectElement: (element) => set({ selectedElement: element }),
-  reorderElements: (sourceIndex, destinationIndex) =>
+  reorderElements: (sourceId, newParentId) =>
     set((state) => {
       const updatedElements = reorderElements(
         state.elements,
-        sourceIndex,
-        destinationIndex,
+        sourceId,
+        newParentId,
       );
       return { elements: updatedElements };
     }),
@@ -111,36 +113,64 @@ const updateElement = (
 
 const reorderElements = (
   elements: Element[],
-  sourceIndex: number,
-  destinationIndex: number,
+  sourceId: string,
+  newParentId: string,
 ): Element[] => {
   const updatedElements = [...elements]; // Shallow copy
-  const [movedElement] = updatedElements.splice(sourceIndex, 1);
-  updatedElements.splice(destinationIndex, 0, movedElement);
+  const draggedElement = findElementById(updatedElements, sourceId);
 
-  if (movedElement.isContainer && movedElement.children) {
-    return updatedElements.map((element) => {
-      if (element.children) {
-        element.children = element.children.filter(
-          (child) => child.id !== movedElement.id,
-        );
-      }
-
-      if (
-        element.id === updatedElements[destinationIndex].id &&
-        (!element.children || element.children.length === 0)
-      ) {
-        element.children = element.children || [];
-        element.children.unshift({
-          ...movedElement,
-          isContainer: false,
-        });
-        element.children.unshift(...(movedElement.children || []));
-      }
-
-      return element;
-    });
+  if (!draggedElement) {
+    return elements; // Return the original elements if the dragged element is not found
   }
 
+  const newParentElement = findElementById(updatedElements, newParentId);
+
+  if (
+    !newParentElement ||
+    !newParentElement.isContainer ||
+    newParentElement.children.length > 0
+  ) {
+    return elements; // Return the original elements if the new parent is not a valid container
+  }
+
+  const updatedDraggedElement = {
+    ...draggedElement,
+    parentId: newParentId,
+  };
+
+  // Remove the dragged element from its original location
+  const originalParentId = draggedElement.parentId || null;
+
+  const originalParent = findElementById(updatedElements, originalParentId);
+
+  if (originalParent) {
+    originalParent.children = originalParent.children?.filter(
+      (child) => child.id !== draggedElement.id,
+    );
+  }
+
+  newParentElement.children.push(updatedDraggedElement);
+
   return updatedElements;
+};
+
+// Helper function to find an element by ID in the tree
+const findElementById = (
+  elements: Element[],
+  id: string,
+): Element | undefined => {
+  for (const element of elements) {
+    if (element.id === id) {
+      return element;
+    }
+
+    if (element.children) {
+      const foundChild = findElementById(element.children, id);
+      if (foundChild) {
+        return foundChild;
+      }
+    }
+  }
+
+  return undefined;
 };
