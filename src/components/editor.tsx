@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ColorPicker } from "@/components/color-picker";
-import { GripHorizontal, Image, FileDown, Plus } from "lucide-react";
+import { FileDown, GripHorizontal, Plus } from "lucide-react";
 import { useEditorStore, type Element } from "@/lib/store";
 import { render } from "@react-email/render";
 import {
@@ -21,10 +21,15 @@ import {
   Head,
   Preview,
   Container,
-  Section,
-  Text,
+  Section as SectionPreview,
+  Text as TextPreview,
 } from "@react-email/components";
 import { v4 as uuidv4 } from "uuid";
+import { Text } from "@/components/text";
+import { Section } from "@/components/section";
+import { Test } from "@/components/test";
+import { blocks } from "@/constants";
+import { Blocks } from "@/components/blocks";
 
 export const Editor = () => {
   const [enablePreview, setEnablePreview] = useState(false);
@@ -32,6 +37,29 @@ export const Editor = () => {
   const selectedElement = useEditorStore((state) => state.selectedElement);
   const selectElement = useEditorStore((state) => state.selectElement);
   const addElement = useEditorStore((state) => state.addElement);
+
+  const renderPreviewElement = (element: Element) => {
+    const { id, element: elementType, classNames, children } = element;
+
+    // Customize this switch statement based on your element types
+    switch (elementType) {
+      case "section":
+        return (
+          <SectionPreview key={id} className={`${classNames} min-h-20 `}>
+            {children && children.map(renderPreviewElement)}
+          </SectionPreview>
+        );
+      case "text":
+        return (
+          <TextPreview key={id} className={`${classNames}`}>
+            {element.content}
+          </TextPreview>
+        );
+
+      default:
+        return null; // Or handle unknown element types accordingly
+    }
+  };
   const renderElement = (element: Element) => {
     const { id, element: elementType, classNames, children } = element;
 
@@ -39,25 +67,12 @@ export const Editor = () => {
     switch (elementType) {
       case "section":
         return (
-          <Section
-            key={id}
-            className={`${classNames} min-h-20 border hover:border-yellow-600`}
-          >
+          <Section element={element}>
             {children && children.map(renderElement)}
           </Section>
         );
       case "text":
-        return (
-          <Text
-            key={id}
-            className={`${classNames} border hover:border-yellow-600`}
-            onClick={() => {
-              selectElement(element);
-            }}
-          >
-            {element.content}
-          </Text>
-        );
+        return <Text element={element} />;
 
       default:
         return null; // Or handle unknown element types accordingly
@@ -70,7 +85,7 @@ export const Editor = () => {
       <Tailwind>
         <Body className="bg-white font-sans">
           <Container className="w-full max-w-full">
-            {elements.map(renderElement)}
+            {elements.map(renderPreviewElement)}
           </Container>
         </Body>
       </Tailwind>
@@ -125,25 +140,14 @@ export const Editor = () => {
                 <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight">
                   Blocks
                 </h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <Card className="flex cursor-grab flex-col items-center gap-4 active:cursor-grabbing">
-                    <CardHeader>
-                      <GripHorizontal className="h-4 w-4" />
-                    </CardHeader>
-                    <CardContent>
-                      <Image className="h-6 w-6" />
-                    </CardContent>
-                    <CardFooter>
-                      <p className="text-sm font-medium leading-none">Image</p>
-                    </CardFooter>
-                  </Card>
-                </div>
+                <Blocks blocks={blocks} />
               </div>
               <div className="flex flex-col gap-4">
                 <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight">
                   Layouts
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
+                  
                   <Card className="flex cursor-grab flex-col items-center gap-4 active:cursor-grabbing">
                     <CardHeader>
                       <GripHorizontal className="h-4 w-4" />
@@ -172,12 +176,15 @@ export const Editor = () => {
           )}
           {!enablePreview && (
             <>
-              <div className="h-auto w-full">{elements.map(renderElement)}</div>
+              <div className="h-auto w-full">
+                {elements.map(renderElement)}
+                </div>
               <Button
                 className="mt-2 w-full"
                 variant="secondary"
                 onClick={() => {
-                  addElement("", {
+                  addElement(null, {
+                    parentId: null,
                     id: uuidv4(),
                     element: "section",
                     isContainer: true,
