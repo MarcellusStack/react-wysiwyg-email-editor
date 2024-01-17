@@ -30,6 +30,10 @@ import { Section } from "@/components/section";
 import { Test } from "@/components/test";
 import { blocks } from "@/constants";
 import { Blocks } from "@/components/blocks";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 export const Editor = () => {
   const [enablePreview, setEnablePreview] = useState(false);
@@ -147,7 +151,6 @@ export const Editor = () => {
                   Layouts
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
-                  
                   <Card className="flex cursor-grab flex-col items-center gap-4 active:cursor-grabbing">
                     <CardHeader>
                       <GripHorizontal className="h-4 w-4" />
@@ -177,8 +180,13 @@ export const Editor = () => {
           {!enablePreview && (
             <>
               <div className="h-auto w-full">
-                {elements.map(renderElement)}
-                </div>
+                <SortableContext
+                  items={elements}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {elements.map(renderElement)}
+                </SortableContext>
+              </div>
               <Button
                 className="mt-2 w-full"
                 variant="secondary"

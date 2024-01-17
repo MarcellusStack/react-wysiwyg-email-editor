@@ -1,5 +1,4 @@
 import { useDraggable } from "@dnd-kit/core";
-import { Text as CText } from "@react-email/components";
 import { type Element } from "@/lib/store";
 
 export const Text = ({ element }: { element: Element }) => {

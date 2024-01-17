@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
+import { arrayMove } from "@dnd-kit/sortable";
 
 export type Element = {
   id: string;
@@ -17,6 +18,7 @@ export type EditorProps = {
 };
 
 type EditorActions = {
+  sortElement: (elementId: string, parentId: string) => void;
   addElement: (parentId: string | null, newElement: Element) => void;
   updateElement: (id: string, updatedElement: Element) => void;
   selectElement: (element: Element | null) => void;
@@ -26,9 +28,22 @@ type EditorActions = {
 export const useEditorStore = create<EditorProps & EditorActions>()((set) => ({
   elements: [],
   selectedElement: null,
+  sortElement: (elementId, parentId) =>
+    set((state) => {
+      const oldIndex = state.elements.findIndex(
+        (element) => element.id === elementId,
+      );
+      const newIndex = state.elements.findIndex(
+        (element) => element.id === parentId,
+      );
+
+      return { elements: arrayMove(state.elements, oldIndex, newIndex) };
+    }),
   addElement: (parentId, newElement) =>
     set((state) => {
-      const updatedElements = addElement(state.elements, parentId, newElement);
+      const updatedElements = addElement(state.elements, parentId, {
+        ...newElement,
+      });
       return { elements: updatedElements };
     }),
 
